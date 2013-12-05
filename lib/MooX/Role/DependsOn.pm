@@ -1,12 +1,14 @@
 package MooX::Role::DependsOn;
 use strictures 1; no warnings 'recursion';
 
+
 use List::Objects::WithUtils 2;
 use List::Objects::Types -all;
 
 use Scalar::Util 'refaddr', 'reftype';
 
 use Types::TypeTiny ();
+
 
 use Moo::Role; use MooX::late 0.014;
 
@@ -15,18 +17,23 @@ has dependency_tag => (
   default => sub { my ($self) = @_; "$self" },
 );
 
+my $ConsumerType = Types::TypeTiny::to_TypeTiny(
+  sub { blessed $_ and $_->can('does') and $_->does('MooX::Role::DependsOn') }
+);
+
 has __depends_on => (
+  lazy    => 1,
   is      => 'ro',
-  isa     => TypedArray[ Types::TypeTiny::to_TypeTiny(sub { 
-      blessed $_ and $_->can('does') and $_->does('MooX::Role::DependsOn') 
-    })
-  ]
+  isa     => TypedArray[$ConsumerType],
+  default => sub {
+    array_of $ConsumerType => ()
+  },
 );
 
 sub depends_on {
-  my ($self, $node) = @_;
-  defined $node ? $self->__depends_on->push($node)
-    : @{ $self->__depends_on }
+  my ($self, @nodes) = @_;
+  return @{ $self->__depends_on } unless @nodes;
+  $self->__depends_on->push(@nodes)
 }
 
 sub __resolve_deps {
@@ -53,7 +60,7 @@ sub __resolve_deps {
   ()
 }
 
-sub scheduled {
+sub dependency_schedule {
   my ($self, %params) = @_;
 
   my $res_by_tag;
@@ -61,13 +68,17 @@ sub scheduled {
     confess "Expected 'skip' param to be an ARRAY type"
       unless reftype $params{skip} eq 'ARRAY';
     $res_by_tag = +{
-      map {; "$_" => 1 } @{ $params{skip} }
+      map {;
+        my $item = blessed $_ ? $_->dependency_tag : $_;
+        $item => 1
+      } @{ $params{skip} }
     };
   }
 
   my $resolved = [];
   $self->__resolve_deps($self, $resolved, $res_by_tag);
-  $resolved
+
+  @$resolved
 }
 
 
