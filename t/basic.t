@@ -7,20 +7,24 @@ use strict; use warnings FATAL => 'all';
   with 'MooX::Role::DependsOn';
 }
 
+
+# basic schedule, default dependency_tag:
+
 my $nA = BareConsumer->new;
 my $nB = BareConsumer->new;
 my $nC = BareConsumer->new;
 my $nD = BareConsumer->new;
 my $nE = BareConsumer->new;
 
-$nA->depends_on($nB);  # A deps on B
-$nA->depends_on($nD);  # A deps on D
+$nA->depends_on($nB, $nD);  # A deps on B, D
+$nB->depends_on($nC, $nE);  # B deps on C, E
+$nC->depends_on($nD, $nE);  # C deps on D, E
 
-$nB->depends_on($nC);  # B deps on C
-$nB->depends_on($nE);  # B deps on E
-
-$nC->depends_on($nD);  # C (and A) dep on D
-$nC->depends_on($nE);  # C (and B) dep on E
+my @deplist = $nA->depends_on;
+is_deeply \@deplist,
+  [ $nB, $nD ],
+  'depends_on list ok'
+    or diag explain \@deplist;
 
 my @result = $nA->dependency_schedule;
 
@@ -28,6 +32,22 @@ is_deeply \@result,
   [ $nD, $nE, $nC, $nB, $nA ],
   'simple deps resolved ok'
     or diag explain \@result;
+
+
+# circular dep:
+
+$nD->depends_on($nB);  # D deps on B, B deps on C, C deps on D
+eval {; $nA->dependency_schedule };
+like $@, qr/Circular dependency/, 'circular dep died ok';
+
+
+# FIXME tests for:
+#  - obj with initial depends_on
+#  - has_dependencies
+#  - clear_dependencies
+#  - custom dependency_tag
+#  - failures:
+#    - type failures (depends_on fed bad item)
 
 
 done_testing
