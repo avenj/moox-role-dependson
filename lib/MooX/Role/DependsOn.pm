@@ -22,12 +22,12 @@ my $ConsumerType = Types::TypeTiny::to_TypeTiny(
 );
 
 has __depends_on => (
+  init_arg => 'depends_on',
   lazy    => 1,
   is      => 'ro',
   isa     => TypedArray[$ConsumerType],
-  default => sub {
-    array_of $ConsumerType => ()
-  },
+  coerce  => 1,
+  default => sub { array_of $ConsumerType },
 );
 
 sub depends_on {
@@ -47,10 +47,11 @@ sub has_dependencies {
 }
 
 sub __resolve_deps {
-  my ($self, $resolved, $params) = @_;
+  my ($self, $params) = @_;
 
-  my $node = $params->{node};
-  my $skip = $params->{skip} ||= +{};
+  my $node       = $params->{node};
+  my $resolved   = $params->{resolved};
+  my $skip       = $params->{skip}       ||= +{};
   my $unresolved = $params->{unresolved} ||= +{};
 
   my $item = $node->dependency_tag;
@@ -63,8 +64,14 @@ sub __resolve_deps {
     if (exists $unresolved->{$depitem}) {
       die "Circular dependency detected: $item -> $depitem\n"
     }
-    __resolve_deps( $self, $resolved,
-      +{ node => $edge, skip => $skip, unresolved => $unresolved }
+    __resolve_deps( $self,
+      +{ 
+        node => $edge, 
+        skip => $skip, 
+        
+        resolved   => $resolved,
+        unresolved => $unresolved ,
+      }
     )
   }
 
@@ -85,19 +92,7 @@ sub __resolve_deps {
 sub dependency_schedule {
   my ($self, %params) = @_;
 
-  my ($skip, $cb);
-  if (defined $params{skip}) {
-    confess "Expected 'skip' param to be an ARRAY type"
-      unless ref $params{skip} 
-      and reftype $params{skip} eq 'ARRAY';
-    $skip = +{
-      map {;
-        my $item = blessed $_ ? $_->dependency_tag : $_;
-        $item => 1
-      } @{ $params{skip} }
-    };
-  }
-
+  my $cb;
   if ($cb = $params{callback}) {
     confess "Expected 'callback' param to be a coderef"
       unless ref $cb
@@ -105,10 +100,10 @@ sub dependency_schedule {
   }
 
   my $resolved = [];
-  $self->__resolve_deps( $resolved,
+  $self->__resolve_deps(
     +{
-      node => $self,
-      ( defined $skip ? (skip     => $skip) : () ),
+      node     => $self,
+      resolved => $resolved,
       ( defined $cb   ? (callback => $cb)   : () ),
     },
   );
@@ -200,8 +195,6 @@ This method recursively resolves dependencies and returns an ordered
 'schedule' (as a list of objects). See the L</SYNOPSIS> for an example.
 
 An exception is thrown if circular dependencies are detected.
-
-FIXME document/test skip param
 
 =head1 AUTHOR
 

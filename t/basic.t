@@ -46,6 +46,7 @@ like $@, qr/Circular dependency/, 'circular dep died ok';
 #  - has_dependencies
 #  - clear_dependencies
 #  - custom dependency_tag
+#  - resolution callbacks
 #  - failures:
 #    - type failures (depends_on fed bad item)
 
