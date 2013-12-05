@@ -150,7 +150,7 @@ MooX::Role::DependsOn - Add a dependency tree to your cows
 
   # Resolve dependencies (recursively) for an object:
   my @ordered = $job->{A}->dependency_schedule;
-  # -> scheduled as ( D, E, C, B, A ):
+  # Scheduled as ( D, E, C, B, A ):
   for my $obj (@ordered) {
     $obj->execute;
   }
@@ -158,10 +158,10 @@ MooX::Role::DependsOn - Add a dependency tree to your cows
 =head1 DESCRIPTION
 
 A L<Moo::Role> that adds a dependency graph builder to your class; objects
-with this role applied can recursively depend on other objects with this role
-applied.
+with this role applied can (recursively) depend on other objects with this role
+applied to produce an ordered list of dependencies.
 
-This is useful for tasks such as job ordering (see the SYNOPSIS) and resolving
+This is useful for applications such as job ordering (see the SYNOPSIS) and resolving
 software dependencies.
 
 =head2 Attributes
@@ -180,8 +180,9 @@ Defaults to the stringified value of C<$self>.
 If passed no arguments, returns the current direct dependencies of the object
 as a list.
 
-If passed objects that are L<MooX::Role::DependsOn> consumers, the objects are
-pushed to the current dependency list.
+If passed objects that are L<MooX::Role::DependsOn> consumers (or used as an
+attribute during object construction), the objects are pushed to the current
+dependency list.
 
 =head3 clear_dependencies
 
@@ -213,6 +214,8 @@ item L</dependency_tag> values we are currently in the process of resolving:
 =head1 AUTHOR
 
 Jon Portnoy <avenj@cobaltirc.org>
+
+Licensed under the same terms as Perl.
 
 =cut
 

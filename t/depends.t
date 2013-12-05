@@ -54,6 +54,8 @@ is_deeply \@result,
   'simple with callback resolved ok'
     or diag explain \@result;
 
+eval {; $nA->dependency_schedule(callback => 'foo') };
+like $@, qr/Expected/, 'bad callback dies ok';
 
 # circular dep:
 
