@@ -5,7 +5,7 @@ use strictures 1; no warnings 'recursion';
 use List::Objects::WithUtils 2;
 use List::Objects::Types -all;
 
-use Scalar::Util 'refaddr', 'reftype';
+use Scalar::Util 'reftype';
 
 use Types::TypeTiny ();
 
@@ -70,7 +70,9 @@ sub __resolve_deps {
         skip => $skip, 
         
         resolved   => $resolved,
-        unresolved => $unresolved ,
+        unresolved => $unresolved,
+        
+        callback => $params->{callback},
       }
     )
   }

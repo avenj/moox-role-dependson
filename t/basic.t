@@ -7,18 +7,20 @@ use strict; use warnings FATAL => 'all';
   with 'MooX::Role::DependsOn';
 }
 
-
-# basic schedule, default dependency_tag:
-
 my $nA = BareConsumer->new;
 my $nB = BareConsumer->new;
-my $nC = BareConsumer->new;
 my $nD = BareConsumer->new;
 my $nE = BareConsumer->new;
 
-$nA->depends_on($nB, $nD);  # A deps on B, D
-$nB->depends_on($nC, $nE);  # B deps on C, E
-$nC->depends_on($nD, $nE);  # C deps on D, E
+ok !$nA->has_dependencies, '! has_dependencies ok';
+$nA->depends_on($nB, $nD);   # A deps on B, D
+ok $nA->has_dependencies,  'has_dependencies ok';
+
+my $nC = BareConsumer->new(
+  depends_on => [ $nD, $nE ] # C deps on D, E
+);
+
+$nB->depends_on($nC, $nE);   # B deps on C, E
 
 my @deplist = $nA->depends_on;
 is_deeply \@deplist,
@@ -33,6 +35,25 @@ is_deeply \@result,
   'simple deps resolved ok'
     or diag explain \@result;
 
+# resolved node cb:
+my $count = 0;
+my $cb = sub {
+  my ($root, $node, $resolved, $queued) = @_;
+  ok $root == $nA,                       'cb first arg ok';
+  ok $node->does('MooX::Role::DependsOn'),  'cb second arg ok';
+  ok ref $resolved eq 'ARRAY',              'cb third arg ok';
+  ok ref $queued eq 'ARRAY',            'cb fourth arg ok';
+  $count++
+};
+@result = $nA->dependency_schedule(
+  callback => $cb
+);
+ok $count == 5, 'callback called 5 times' or diag $count;
+is_deeply \@result,
+  [ $nD, $nE, $nC, $nB, $nA ],
+  'simple with callback resolved ok'
+    or diag explain \@result;
+
 
 # circular dep:
 
@@ -40,15 +61,10 @@ $nD->depends_on($nB);  # D deps on B, B deps on C, C deps on D
 eval {; $nA->dependency_schedule };
 like $@, qr/Circular dependency/, 'circular dep died ok';
 
+ok $nD->clear_dependencies, 'clear_dependencies ok';
+ok !$nD->has_dependencies,  'cleared dependencies';
 
-# FIXME tests for:
-#  - obj with initial depends_on
-#  - has_dependencies
-#  - clear_dependencies
-#  - custom dependency_tag
-#  - resolution callbacks
-#  - failures:
-#    - type failures (depends_on fed bad item)
-
+eval {; $nD->depends_on(foo => 1) };
+ok $@, 'bad depends_on dies ok';
 
 done_testing
