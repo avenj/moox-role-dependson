@@ -198,6 +198,18 @@ This method recursively resolves dependencies and returns an ordered
 
 An exception is thrown if circular dependencies are detected.
 
+A callback can be passed in; for each successful resolution, the callback will
+be invoked against the root object we started with and passed in the resolved
+object, the sorted ARRAY of scheduled nodes thus far, and an unsorted ARRAY of
+item L</dependency_tag> values we are currently in the process of resolving:
+
+  my @ordered = $startnode->dependency_schedule(
+    callback => sub {
+      my ($root, $node, $resolved, $queued_tags) = @_;
+      # ...
+    }
+  );
+
 =head1 AUTHOR
 
 Jon Portnoy <avenj@cobaltirc.org>
