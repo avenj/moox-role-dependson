@@ -36,11 +36,22 @@ sub depends_on {
   $self->__depends_on->push(@nodes)
 }
 
-sub __resolve_deps {
-  my ($self, $node, $resolved, $res_by_tag, $unresolved) = @_;
+sub clear_dependencies {
+  my ($self) = @_;
+  $self->__depends_on->clear
+}
 
-  $res_by_tag  ||= +{};
-  $unresolved  ||= +{};
+sub has_dependencies {
+  my ($self) = @_;
+  $self->__depends_on->has_any
+}
+
+sub __resolve_deps {
+  my ($self, $resolved, $params) = @_;
+
+  my $node = $params->{node};
+  my $skip = $params->{skip} ||= +{};
+  my $unresolved = $params->{unresolved} ||= +{};
 
   my $item = $node->dependency_tag;
 
@@ -48,26 +59,38 @@ sub __resolve_deps {
 
   DEP: for my $edge ($node->depends_on) {
     my $depitem = $edge->dependency_tag;
-    next DEP if exists $res_by_tag->{$depitem};
+    next DEP if exists $skip->{$depitem};
     if (exists $unresolved->{$depitem}) {
       die "Circular dependency detected: $item -> $depitem\n"
     }
-    __resolve_deps($self, $edge, $resolved, $res_by_tag, $unresolved)
+    __resolve_deps( $self, $resolved,
+      +{ node => $edge, skip => $skip, unresolved => $unresolved }
+    )
   }
 
   push @$resolved, $node;
-  $res_by_tag->{$item} = delete $unresolved->{$item};
+  $skip->{$item} = delete $unresolved->{$item};
+
+  if (my $cb = $params->{callback}) {
+    $self->$cb(
+      $node,                  # Node we just scheduled
+      [ @$resolved ],         # Scheduled nodes 
+      [ keys %$unresolved ],  # Nodes in the process of being scheduled   
+    )
+  }
+
   ()
 }
 
 sub dependency_schedule {
   my ($self, %params) = @_;
 
-  my $res_by_tag;
+  my ($skip, $cb);
   if (defined $params{skip}) {
     confess "Expected 'skip' param to be an ARRAY type"
-      unless reftype $params{skip} eq 'ARRAY';
-    $res_by_tag = +{
+      unless ref $params{skip} 
+      and reftype $params{skip} eq 'ARRAY';
+    $skip = +{
       map {;
         my $item = blessed $_ ? $_->dependency_tag : $_;
         $item => 1
@@ -75,13 +98,115 @@ sub dependency_schedule {
     };
   }
 
+  if ($cb = $params{callback}) {
+    confess "Expected 'callback' param to be a coderef"
+      unless ref $cb
+      and reftype $cb eq 'CODE';
+  }
+
   my $resolved = [];
-  $self->__resolve_deps($self, $resolved, $res_by_tag);
+  $self->__resolve_deps( $resolved,
+    +{
+      node => $self,
+      ( defined $skip ? (skip     => $skip) : () ),
+      ( defined $cb   ? (callback => $cb)   : () ),
+    },
+  );
 
   @$resolved
 }
 
 
 1;
+
+=pod
+
+=head1 NAME
+
+MooX::Role::DependsOn - Add a dependency tree to your cows
+
+=head1 SYNOPSIS
+
+  package Task;
+  use Moo;
+  with 'MooX::Role::DependsOn';
+
+  sub execute {
+    my ($self) = @_;
+    # ... do stuff ...
+  }
+
+  package main;
+  # Create some objects that consume MooX::Role::DependsOn:
+  my $job = {};
+  for my $jobname (qw/ A B C D E /) {
+    $job->{$jobname} = Task->new
+  }
+
+  # Add some dependencies:
+  # A depends on B, D:
+  $job->{A}->depends_on( $job->{B}, $job->{D} );
+  # B depends on C, E:
+  $job->{B}->depends_on( $job->{C}, $job->{E} );
+  # C depends on D, E:
+  $job->{C}->depends_on( $job->{D}, $job->{E} );
+
+  # Resolve dependencies (recursively) for an object:
+  my @ordered = $job->{A}->dependency_schedule;
+  # -> scheduled as ( D, E, C, B, A ):
+  for my $obj (@ordered) {
+    $obj->execute;
+  }
+
+=head1 DESCRIPTION
+
+A L<Moo::Role> that adds a dependency graph builder to your class; objects
+with this role applied can recursively depend on other objects with this role
+applied.
+
+This is useful for tasks such as job ordering (see the SYNOPSIS) and resolving
+software dependencies.
+
+=head2 Attributes
+
+=head3 dependency_tag
+
+An object's B<dependency_tag> is used to perform the actual resolution; the
+tag should be a stringifiable value that is unique within the tree.
+
+Defaults to the stringified value of C<$self>.
+
+=head2 Methods
+
+=head3 depends_on
+
+If passed no arguments, returns the current direct dependencies of the object
+as a list.
+
+If passed objects that are L<MooX::Role::DependsOn> consumers, the objects are
+pushed to the current dependency list.
+
+=head3 clear_dependencies
+
+Clears the current dependency list for this object.
+
+=head3 has_dependencies
+
+Returns boolean true if the object has dependencies.
+
+=head3 dependency_schedule
+
+This method recursively resolves dependencies and returns an ordered
+'schedule' (as a list of objects). See the L</SYNOPSIS> for an example.
+
+An exception is thrown if circular dependencies are detected.
+
+FIXME document/test skip param
+
+=head1 AUTHOR
+
+Jon Portnoy <avenj@cobaltirc.org>
+
+=cut
 
 # vim: ts=2 sw=2 et sts=2 ft=perl
