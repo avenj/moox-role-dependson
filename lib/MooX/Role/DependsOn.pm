@@ -71,8 +71,7 @@ sub __resolve_deps {
         
         resolved   => $resolved,
         unresolved => $unresolved,
-        
-        callback => $params->{callback},
+        callback   => $params->{callback},
       }
     )
   }
@@ -97,8 +96,7 @@ sub dependency_schedule {
   my $cb;
   if ($cb = $params{callback}) {
     confess "Expected 'callback' param to be a coderef"
-      unless ref $cb
-      and reftype $cb eq 'CODE';
+      unless ref $cb and reftype $cb eq 'CODE';
   }
 
   my $resolved = [];
@@ -106,7 +104,7 @@ sub dependency_schedule {
     +{
       node     => $self,
       resolved => $resolved,
-      ( defined $cb   ? (callback => $cb)   : () ),
+      ( defined $cb ? (callback => $cb) : () ),
     },
   );
 
@@ -158,8 +156,8 @@ MooX::Role::DependsOn - Add a dependency tree to your cows
 =head1 DESCRIPTION
 
 A L<Moo::Role> that adds a dependency graph builder to your class; objects
-with this role applied can (recursively) depend on other objects with this role
-applied to produce an ordered list of dependencies.
+with this role applied can (recursively) depend on other objects (that also
+consume this role) to produce an ordered list of dependencies.
 
 This is useful for applications such as job ordering (see the SYNOPSIS) and resolving
 software dependencies.

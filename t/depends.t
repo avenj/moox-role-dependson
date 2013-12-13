@@ -39,10 +39,10 @@ is_deeply \@result,
 my $count = 0;
 my $cb = sub {
   my ($root, $node, $resolved, $queued) = @_;
-  ok $root == $nA,                       'cb first arg ok';
+  ok $root == $nA,                          'cb first arg ok';
   ok $node->does('MooX::Role::DependsOn'),  'cb second arg ok';
   ok ref $resolved eq 'ARRAY',              'cb third arg ok';
-  ok ref $queued eq 'ARRAY',            'cb fourth arg ok';
+  ok ref $queued eq 'ARRAY',                'cb fourth arg ok';
   $count++
 };
 @result = $nA->dependency_schedule(
@@ -56,6 +56,9 @@ is_deeply \@result,
 
 eval {; $nA->dependency_schedule(callback => 'foo') };
 like $@, qr/Expected/, 'bad callback dies ok';
+eval {; $nA->dependency_schedule(callback => []) };
+like $@, qr/Expected/, 'bad callback dies ok';
+
 
 # circular dep:
 
