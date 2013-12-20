@@ -41,6 +41,23 @@ my $cb = sub {
   my ($root, $node, $resolved, $queued) = @_;
   ok $root == $nA,                          'cb first arg ok';
   ok $node->does('MooX::Role::DependsOn'),  'cb second arg ok';
+  for ($count) {
+    if ($_ == 0) {
+      ok $node == $nD, 'got node D'; last
+    }
+    if ($_ == 1) {
+      ok $node == $nE, 'got node E'; last
+    }
+    if ($_ == 2) {
+      ok $node == $nC, 'got node C'; last
+    }
+    if ($_ == 3) {
+      ok $node == $nB, 'got node B'; last
+    }
+    if ($_ == 4) {
+      ok $node == $nA, 'got node A'; last
+    }
+  }
   ok ref $resolved eq 'ARRAY',              'cb third arg ok';
   ok ref $queued eq 'ARRAY',                'cb fourth arg ok';
   $count++
