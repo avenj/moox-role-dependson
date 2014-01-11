@@ -81,7 +81,35 @@ like $@, qr/Expected/, 'bad callback dies ok';
 
 $nD->depends_on($nB);  # D deps on B, B deps on C, C deps on D
 eval {; $nA->dependency_schedule };
-like $@, qr/Circular dependency/, 'circular dep died ok';
+like $@, qr/Circular dependency/i, 'circular dep died ok';
+
+# FIXME
+# schedule w/ callback returning false
+my $cb_called = 0;
+eval {; 
+  $nA->dependency_schedule(
+    circular_dep_callback => sub {
+      $cb_called++;
+      my (undef, $state) = @_;
+      ok ref $state->resolved_array eq 'ARRAY', 'resolved_array ok';
+      ok ref $state->unresolved_hash eq 'HASH', 'unresolved_hash ok';
+      ok $state->node->does('MooX::Role::DependsOn'), 'node ok';
+      ok $state->edge->does('MooX::Role::DependsOn'), 'edge ok';
+      0
+    },
+  );
+};
+ok $cb_called, 'circular dep cb called ok';
+like $@, qr/Circular dependency/i, 
+  'circular dep cb returning false died ok';
+
+# schedule w/ callback returning true
+eval {;
+  $nA->dependency_schedule(
+    circular_dep_callback => sub { 1 }
+  )
+};
+ok !$@, 'circular dep cb returning true continued ok';
 
 ok $nD->clear_dependencies, 'clear_dependencies ok';
 ok !$nD->has_dependencies,  'cleared dependencies';
