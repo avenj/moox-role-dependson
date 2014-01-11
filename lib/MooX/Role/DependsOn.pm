@@ -62,6 +62,18 @@ sub __resolve_deps {
     my $depitem = $edge->dependency_tag;
     next DEP if exists $skip->{$depitem};
     if (exists $unresolved->{$depitem}) {
+      if (my $cb = $params->{circular_dep_callback}) {
+        # Pass full state for scary munging:
+        my $state = hash(
+          tag             => $item,
+          unresolved_tag  => $depitem,
+          node            => $node,
+          resolved_array  => $resolved,
+          unresolved_hash => $unresolved,
+          skip_hash       => $skip
+        )->inflate;
+        next DEP if $self->$cb( $state )
+      }
       die "Circular dependency detected: $item -> $depitem\n"
     }
     __resolve_deps( $self,
@@ -71,7 +83,9 @@ sub __resolve_deps {
         
         resolved   => $resolved,
         unresolved => $unresolved,
-        callback   => $params->{callback},
+
+        callback              => $params->{callback},
+        circular_dep_callback => $params->{circular_dep_callback},
       }
     )
   }
@@ -99,12 +113,19 @@ sub dependency_schedule {
       unless ref $cb and reftype $cb eq 'CODE';
   }
 
+  my $circ_cb;
+  if ($circ_cb = $params{circular_dep_callback}) {
+    confess "Expected 'circular_dep_callback' param to be a coderef"
+      unless ref $circ_cb and reftype $circ_cb eq 'CODE';
+  }
+
   my $resolved = [];
   $self->__resolve_deps(
     +{
       node     => $self,
       resolved => $resolved,
       ( defined $cb ? (callback => $cb) : () ),
+      ( defined $circ_cb ? (circular_dep_callback => $circ_cb) : () ),
     },
   );
 
