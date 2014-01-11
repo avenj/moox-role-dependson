@@ -65,9 +65,7 @@ sub __resolve_deps {
       if (my $cb = $params->{circular_dep_callback}) {
         # Pass full state for scary munging:
         my $state = hash(
-          tag             => $item,
           node            => $node,
-          edge_tag        => $depitem,
           edge            => $edge,
           resolved_array  => $resolved,
           unresolved_hash => $unresolved,
@@ -252,14 +250,6 @@ The object provides the following accessors:
 
 =over
 
-=item tag
-
-The L</dependency_tag> of the initial start node.
-
-=item edge_tag
-
-The L</dependency_tag> of the conflicting object.
-
 =item node
 
 The node we are currently processing.
@@ -271,7 +261,7 @@ The dependency node we are attempting to examine.
 =item resolved_array
 
 The ordered list of successfully resolved nodes, as an ARRAY of the original
-node objects.
+objects.
 
 =item unresolved_hash
 
