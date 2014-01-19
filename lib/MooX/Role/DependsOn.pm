@@ -5,7 +5,7 @@ use strictures 1; no warnings 'recursion';
 use List::Objects::WithUtils 2;
 use List::Objects::Types -all;
 
-use Scalar::Util 'reftype';
+use Scalar::Util 'blessed', 'reftype';
 
 use Types::TypeTiny ();
 
@@ -245,6 +245,9 @@ against the root object:
 The C<$state> object passed in is a simple struct-like object providing access
 to the current resolution state. This consists of a set of lists (represented
 as hashes for performance reasons).
+
+(These are references to the actual in-use state; it's possible to do scary
+things to the tree from here . . .)
 
 The object provides the following accessors:
 
