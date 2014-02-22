@@ -38,9 +38,10 @@ is_deeply \@result,
 # resolved node cb:
 my $count = 0;
 my $cb = sub {
-  my ($root, $node, $resolved, $queued) = @_;
-  ok $root == $nA,                          'cb first arg ok';
-  ok $node->does('MooX::Role::DependsOn'),  'cb second arg ok';
+  my ($root, $state) = @_;
+  ok $root == $nA, 'cb first arg ok';
+  ok $state, 'cb second arg ok';
+  my $node = $state->node;
   for ($count) {
     if ($_ == 0) {
       ok $node == $nD, 'got node D'; last
@@ -58,12 +59,12 @@ my $cb = sub {
       ok $node == $nA, 'got node A'; last
     }
   }
-  ok ref $resolved eq 'ARRAY',              'cb third arg ok';
-  ok ref $queued eq 'ARRAY',                'cb fourth arg ok';
+  ok ref $state->resolved_array  eq 'ARRAY', 'resolved_array ok';
+  ok ref $state->unresolved_hash eq 'HASH',  'unresolved_hash ok';
   $count++
 };
 @result = $nA->dependency_schedule(
-  callback => $cb
+  resolved_callback => $cb
 );
 ok $count == 5, 'callback called 5 times' or diag $count;
 is_deeply \@result,
@@ -71,9 +72,9 @@ is_deeply \@result,
   'simple with callback resolved ok'
     or diag explain \@result;
 
-eval {; $nA->dependency_schedule(callback => 'foo') };
+eval {; $nA->dependency_schedule(resolved_callback => 'foo') };
 like $@, qr/Expected/, 'bad callback dies ok';
-eval {; $nA->dependency_schedule(callback => []) };
+eval {; $nA->dependency_schedule(resolved_callback => []) };
 like $@, qr/Expected/, 'bad callback dies ok';
 
 

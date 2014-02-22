@@ -83,7 +83,7 @@ sub __resolve_deps {
         resolved   => $resolved,
         unresolved => $unresolved,
 
-        callback              => $params->{callback},
+        resolved_callback     => $params->{resolved_callback},
         circular_dep_callback => $params->{circular_dep_callback},
       }
     )
@@ -92,12 +92,14 @@ sub __resolve_deps {
   push @$resolved, $node;
   $skip->{$item} = delete $unresolved->{$item};
 
-  if (my $cb = $params->{callback}) {
-    $self->$cb(
-      $node,                  # Node we just scheduled
-      [ @$resolved ],         # Scheduled nodes 
-      [ keys %$unresolved ],  # Nodes in the process of being scheduled   
-    )
+  if (my $cb = $params->{resolved_callback}) {
+    my $state = hash(
+      node            => $node,
+      resolved_array  => $resolved,
+      unresolved_hash => $unresolved,
+      skip_hash       => $skip
+    )->inflate;
+    $self->$cb( $state );
   }
 
   ()
@@ -106,9 +108,13 @@ sub __resolve_deps {
 sub dependency_schedule {
   my ($self, %params) = @_;
 
+  confess 
+    "'callback' is deprecated, see the documentation for 'resolved_callback'"
+   if $params{callback};
+
   my $cb;
-  if ($cb = $params{callback}) {
-    confess "Expected 'callback' param to be a coderef"
+  if ($cb = $params{resolved_callback}) {
+    confess "Expected 'resolved_callback' param to be a coderef"
       unless ref $cb and reftype $cb eq 'CODE';
   }
 
@@ -123,7 +129,7 @@ sub dependency_schedule {
     +{
       node     => $self,
       resolved => $resolved,
-      ( defined $cb ? (callback => $cb) : () ),
+      ( defined $cb ? (resolved_callback => $cb) : () ),
       ( defined $circ_cb ? (circular_dep_callback => $circ_cb) : () ),
     },
   );
@@ -218,25 +224,10 @@ This method recursively resolves dependencies and returns an ordered
 =head4 Resolution callbacks
 
 A callback can be passed in; for each successful resolution, the callback will
-be invoked against the root object we started with and passed the resolved
-object, the sorted ARRAY of scheduled nodes thus far, and an unsorted ARRAY of
-object L</dependency_tag> values we are currently in the process of resolving:
+be invoked against the root object we started with:
 
   my @ordered = $startnode->dependency_schedule(
-    callback => sub {
-      my (undef, $node, $resolved, $queued_tags) = @_;
-      # ...
-    },
-  );
-
-=head4 Circular dependency callbacks
-
-An exception is thrown if circular dependencies are detected; it's possible to
-override that behavior by providing a B<circular_dep_callback> that is invoked
-against the root object:
-
-  my @ordered = $startnode->dependency_schedule(
-    circular_dep_callback => sub {
+    resolved_callback => sub {
       my (undef, $state) = @_;
       # ...
     },
@@ -257,10 +248,6 @@ The object provides the following accessors:
 
 The node we are currently processing.
 
-=item edge
-
-The dependency node we are attempting to examine.
-
 =item resolved_array
 
 The ordered list of successfully resolved nodes, as an ARRAY of the original
@@ -277,8 +264,32 @@ The list of nodes to skip, as a HASH keyed on L</dependency_tag>.
 
 =back
 
+=head4 Circular dependency callbacks
+
+An exception is thrown if circular dependencies are detected; it's possible to
+override that behavior by providing a B<circular_dep_callback> that is invoked
+against the root object:
+
+  my @ordered = $startnode->dependency_schedule(
+    circular_dep_callback => sub {
+      my (undef, $state) = @_;
+      # ...
+    },
+  );
+
 If the callback returns true, resolution continues at the next node; otherwise
 an exception is thrown after callback execution.
+
+The C<$state> object has the same accessors as resolution callbacks (described
+above), plus the following:
+
+=over
+
+=item edge
+
+The dependency node we are attempting to examine.
+
+=back
 
 =head1 AUTHOR
 
