@@ -37,7 +37,7 @@ MooX::Role::DependsOn - Add a dependency tree to your cows
 
 # DESCRIPTION
 
-A [Moo::Role](http://search.cpan.org/perldoc?Moo::Role) that adds a dependency graph builder to your class; objects
+A [Moo::Role](https://metacpan.org/pod/Moo::Role) that adds a dependency graph builder to your class; objects
 with this role applied can (recursively) depend on other objects (that also
 consume this role) to produce an ordered list of dependencies.
 
@@ -48,7 +48,7 @@ software dependencies.
 
 ### dependency\_tag
 
-An object's __dependency\_tag__ is used to perform the actual resolution; the
+An object's **dependency\_tag** is used to perform the actual resolution; the
 tag should be a stringifiable value that is unique within the tree.
 
 Defaults to the stringified value of `$self`.
@@ -60,7 +60,7 @@ Defaults to the stringified value of `$self`.
 If passed no arguments, returns the current direct dependencies of the object
 as a list.
 
-If passed objects that are [MooX::Role::DependsOn](http://search.cpan.org/perldoc?MooX::Role::DependsOn) consumers (or used as an
+If passed objects that are [MooX::Role::DependsOn](https://metacpan.org/pod/MooX::Role::DependsOn) consumers (or used as an
 attribute during object construction), the objects are pushed to the current
 dependency list.
 
@@ -75,7 +75,7 @@ Returns boolean true if the object has dependencies.
 ### dependency\_schedule
 
 This method recursively resolves dependencies and returns an ordered
-'schedule' (as a list of objects). See the ["SYNOPSIS"](#SYNOPSIS) for an example.
+'schedule' (as a list of objects). See the ["SYNOPSIS"](#synopsis) for an example.
 
 #### Resolution callbacks
 
@@ -110,16 +110,16 @@ The object provides the following accessors:
 - unresolved\_hash
 
     The list of 'seen but not yet resolved' nodes, as a HASH keyed on
-    ["dependency\_tag"](#dependency\_tag).
+    ["dependency\_tag"](#dependency_tag).
 
 - skip\_hash
 
-    The list of nodes to skip, as a HASH keyed on ["dependency\_tag"](#dependency\_tag).
+    The list of nodes to skip, as a HASH keyed on ["dependency\_tag"](#dependency_tag).
 
 #### Circular dependency callbacks
 
 An exception is thrown if circular dependencies are detected; it's possible to
-override that behavior by providing a __circular\_dep\_callback__ that is invoked
+override that behavior by providing a **circular\_dep\_callback** that is invoked
 against the root object:
 
     my @ordered = $startnode->dependency_schedule(
