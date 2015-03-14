@@ -1,33 +1,32 @@
 package MooX::Role::DependsOn;
-use strictures 1; no warnings 'recursion';
 
+use strictures 2;
+no warnings 'recursion';
+
+use Carp;
+use Scalar::Util 'blessed', 'reftype';
 
 use List::Objects::WithUtils 2;
 use List::Objects::Types -all;
 
-use Scalar::Util 'blessed', 'reftype';
-
+use Types::Standard -types;
 use Types::TypeTiny ();
 
 
-use Moo::Role; use MooX::late 0.014;
+use Moo::Role;
 
 has dependency_tag => (
   is      => 'rw',
   default => sub { my ($self) = @_; "$self" },
 );
 
-my $ConsumerType = Types::TypeTiny::to_TypeTiny(
-  sub { blessed $_ and $_->can('does') and $_->does('MooX::Role::DependsOn') }
-);
-
 has __depends_on => (
   init_arg => 'depends_on',
   lazy    => 1,
   is      => 'ro',
-  isa     => TypedArray[$ConsumerType],
+  isa     => TypedArray[ ConsumerOf['MooX::Role::DependsOn'] ],
   coerce  => 1,
-  default => sub { array_of $ConsumerType },
+  default => sub { array_of ConsumerOf['MooX::Role::DependsOn'] },
 );
 
 sub depends_on {
