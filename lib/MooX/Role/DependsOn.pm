@@ -233,8 +233,8 @@ be invoked against the root object we started with:
   );
 
 The C<$state> object passed in is a simple struct-like object providing access
-to the current resolution state. This consists of a set of lists (represented
-as hashes for performance reasons).
+to the current resolution state. This consists primarily of a set of lists
+(represented as hashes for performance reasons).
 
 (These are references to the actual in-use state; it's possible to do scary
 things to the tree from here . . .)
