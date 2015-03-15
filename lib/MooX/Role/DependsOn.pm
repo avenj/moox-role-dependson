@@ -10,8 +10,6 @@ use List::Objects::WithUtils 2;
 use List::Objects::Types -all;
 
 use Types::Standard -types;
-use Types::TypeTiny ();
-
 
 use Moo::Role;
 
