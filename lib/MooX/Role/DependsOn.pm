@@ -27,22 +27,16 @@ has __depends_on => (
   isa     => TypedArray[ ConsumerOf['MooX::Role::DependsOn'] ],
   coerce  => 1,
   default => sub { array_of ConsumerOf['MooX::Role::DependsOn'] },
+  handles => +{
+    clear_dependencies => 'clear',
+    has_dependencies   => 'has_any',
+  },
 );
 
 sub depends_on {
   my ($self, @nodes) = @_;
   return @{ $self->__depends_on } unless @nodes;
   $self->__depends_on->push(@nodes)
-}
-
-sub clear_dependencies {
-  my ($self) = @_;
-  $self->__depends_on->clear
-}
-
-sub has_dependencies {
-  my ($self) = @_;
-  $self->__depends_on->has_any
 }
 
 sub __resolve_deps {
@@ -201,7 +195,7 @@ Defaults to the stringified value of C<$self>.
 =head3 depends_on
 
 If passed no arguments, returns the current direct dependencies of the object
-as a list.
+as an unordered list.
 
 If passed objects that are L<MooX::Role::DependsOn> consumers (or used as an
 attribute during object construction), the objects are pushed to the current
