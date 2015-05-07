@@ -11,6 +11,7 @@ use List::Objects::Types -all;
 
 use Types::Standard -types;
 
+
 use Moo::Role;
 
 has dependency_tag => (
@@ -196,8 +197,8 @@ If passed no arguments, returns the current direct dependencies of the object
 as an unordered list.
 
 If passed objects that are L<MooX::Role::DependsOn> consumers (or used as an
-attribute during object construction), the objects are pushed to the current
-dependency list.
+attribute with an ARRAY-type value during object construction), the objects
+are pushed to the current dependency list.
 
 =head3 clear_dependencies
 
@@ -229,7 +230,8 @@ to the current resolution state. This consists primarily of a set of lists
 (represented as hashes for performance reasons).
 
 (These are references to the actual in-use state; it's possible to do scary
-things to the tree from here . . .)
+things to the tree from here -- in which case it is presumed that you have read
+and understand the source code.)
 
 The object provides the following accessors:
 
@@ -251,7 +253,8 @@ L</dependency_tag>.
 
 =item skip_hash
 
-The list of nodes to skip, as a HASH keyed on L</dependency_tag>.
+The list of nodes to skip (because they have already been seen), as a HASH
+keyed on L</dependency_tag>.
 
 =back
 
