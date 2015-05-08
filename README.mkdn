@@ -58,11 +58,11 @@ Defaults to the stringified value of `$self`.
 ### depends\_on
 
 If passed no arguments, returns the current direct dependencies of the object
-as a list.
+as an unordered list.
 
 If passed objects that are [MooX::Role::DependsOn](https://metacpan.org/pod/MooX::Role::DependsOn) consumers (or used as an
-attribute during object construction), the objects are pushed to the current
-dependency list.
+attribute with an ARRAY-type value during object construction), the objects
+are pushed to the current dependency list.
 
 ### clear\_dependencies
 
@@ -90,11 +90,12 @@ be invoked against the root object we started with:
     );
 
 The `$state` object passed in is a simple struct-like object providing access
-to the current resolution state. This consists of a set of lists (represented
-as hashes for performance reasons).
+to the current resolution state. This consists primarily of a set of lists
+(represented as hashes for performance reasons).
 
 (These are references to the actual in-use state; it's possible to do scary
-things to the tree from here . . .)
+things to the tree from here -- in which case it is presumed that you have read
+and understand the source code.)
 
 The object provides the following accessors:
 
@@ -114,7 +115,8 @@ The object provides the following accessors:
 
 - skip\_hash
 
-    The list of nodes to skip, as a HASH keyed on ["dependency\_tag"](#dependency_tag).
+    The list of nodes to skip (because they have already been seen), as a HASH
+    keyed on ["dependency\_tag"](#dependency_tag).
 
 #### Circular dependency callbacks
 

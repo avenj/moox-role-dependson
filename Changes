@@ -1,5 +1,12 @@
 Revision history for Perl module MooX-Role-DependsOn
 
+0.002003 2015-05-08
+
+  - Minor documentation improvements
+
+  - Minor cleanups; method delegation for clear/has_dependencies,
+    kill stale import
+
 0.002002 2015-03-14
 
   - Kill silly custom type that should've been a ConsumerOf
