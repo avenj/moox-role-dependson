@@ -84,7 +84,6 @@ $nD->depends_on($nB);  # D deps on B, B deps on C, C deps on D
 eval {; $nA->dependency_schedule };
 like $@, qr/Circular dependency/i, 'circular dep died ok';
 
-# FIXME
 # schedule w/ callback returning false
 my $cb_called = 0;
 eval {; 
