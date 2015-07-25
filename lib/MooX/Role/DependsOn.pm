@@ -244,7 +244,8 @@ The node we are currently processing.
 =item resolved_array
 
 The ordered list of successfully resolved nodes, as an ARRAY of the original
-objects.
+objects; this is the ARRAY used to produce the final list produced by
+L</dependency_schedule>.
 
 =item unresolved_hash
 
