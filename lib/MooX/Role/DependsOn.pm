@@ -6,7 +6,7 @@ no warnings 'recursion';
 use Carp;
 use Scalar::Util 'blessed', 'reftype';
 
-use List::Objects::WithUtils 2;
+use List::Objects::WithUtils;
 use List::Objects::Types -all;
 
 use Types::Standard -types;
