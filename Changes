@@ -1,5 +1,12 @@
 Revision history for Perl module MooX-Role-DependsOn
 
+0.002004 2015-11-13
+
+  - POD
+
+  - Drop unnecessary VERSION check in Lowu 'require'
+    (breaks my reverse-dep-check workflow ...)
+
 0.002003 2015-05-08
 
   - Minor documentation improvements
