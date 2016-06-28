@@ -144,6 +144,6 @@ above), plus the following:
 
 # AUTHOR
 
-Jon Portnoy <avenj@cobaltirc.org>
+Jon Portnoy &lt;avenj@cobaltirc.org>
 
 Licensed under the same terms as Perl.

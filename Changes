@@ -1,5 +1,9 @@
 Revision history for Perl module MooX-Role-DependsOn
 
+1.001001 2016-06-27
+
+  - Minor packaging changes (ReadmeAnyFromPod)
+
 0.002004 2015-11-13
 
   - POD
